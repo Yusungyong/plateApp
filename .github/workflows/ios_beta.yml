@@ -7,9 +7,12 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-12
+    runs-on: macos-latest
 
     steps:
+      - name: ✅ 워크플로우 시작 확인용
+        run: echo "🚀 GitHub Actions 워크플로우 시작됨!"
+
       - uses: actions/checkout@v3
 
       - name: Cache Ruby gems
@@ -28,6 +31,7 @@ jobs:
 
       - name: Check Ruby version and gem path
         run: |
+          echo "🔧 루비 버전 확인 시작"
           ruby -v
           which gem
           gem env
@@ -46,11 +50,15 @@ jobs:
           node-version: 18
 
       - name: Install JS dependencies
-        run: npm install
+        run: |
+          echo "📦 JS 의존성 설치 시작"
+          npm install
 
       - name: Build and Deploy to TestFlight
         env:
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
-        run: bundle exec fastlane ios beta
+        run: |
+          echo "🚀 Fastlane 빌드 및 TestFlight 배포 시작"
+          bundle exec fastlane ios beta
