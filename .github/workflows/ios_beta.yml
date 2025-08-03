@@ -12,11 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Cache Ruby gems
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gem-
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1.143.0
         with:
           ruby-version: 2.7.5
-
+          bundler-cache: true
 
       - name: Check Ruby version and gem path
         run: |
@@ -24,10 +32,13 @@ jobs:
           which gem
           gem env
 
-      - name: Install dependencies
-        run: |
-          gem install bundler
-          bundle install
+      - name: Cache npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
