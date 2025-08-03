@@ -29,13 +29,6 @@ jobs:
           ruby-version: 3.2.2
           bundler-cache: true
 
-      - name: Check Ruby version and gem path
-        run: |
-          echo "🔧 루비 버전 확인 시작"
-          ruby -v
-          which gem
-          gem env
-
       - name: Cache npm
         uses: actions/cache@v3
         with:
@@ -58,17 +51,24 @@ jobs:
         run: |
           cd ios
           pod install
-          
+
       - name: Install fastlane (if not using Bundler)
         run: |
           gem install fastlane
 
       - name: Build and Deploy to TestFlight
         env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
         run: |
           echo "🚀 Fastlane 빌드 및 TestFlight 배포 시작"
           cd ios
-          fastlane ios beta
+
+          # .p8 파일 생성
+          mkdir -p fastlane
+          echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" > fastlane/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8
+
+          # Fastlane 실행
+          bundle exec fastlane ios beta || fastlane ios beta
