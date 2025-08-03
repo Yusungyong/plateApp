@@ -54,6 +54,12 @@ jobs:
           echo "📦 JS 의존성 설치 시작"
           npm install --legacy-peer-deps
 
+      - name: Install Ruby gems (bundle install)
+        run: |
+          echo "💎 Ruby gem 설치 시작"
+          cd ios
+          bundle install
+
       - name: Build and Deploy to TestFlight
         env:
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
