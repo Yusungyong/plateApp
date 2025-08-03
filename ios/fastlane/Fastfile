@@ -33,14 +33,13 @@ platform :ios do
       scheme: "PlateApp",
       export_method: "app-store",
       export_options: {
-        provisioningProfiles: {
-          "kr.yuseongyong.plateApp" => "match AppStore kr.yuseongyong.plateApp"
-        },
-        signingStyle: "manual",
+        signingStyle: "automatic",
         compileBitcode: false,
         manageAppVersionAndBuildNumber: false
-      }
+      },
+      xcargs: "-allowProvisioningUpdates"
     )
+
 
     upload_to_testflight(api_key: api_key)
   end
