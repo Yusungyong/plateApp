@@ -54,11 +54,11 @@ jobs:
           echo "📦 JS 의존성 설치 시작"
           npm install --legacy-peer-deps
 
-      - name: Install CocoaPods dependencies
+      - name: Install Ruby Gems
         run: |
-          echo "📦 CocoaPods 설치 시작"
+          echo "💎 bundle install 실행"
           cd ios
-          pod install
+          bundle install
 
       - name: Build and Deploy to TestFlight
         env:
