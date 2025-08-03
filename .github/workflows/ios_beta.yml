@@ -52,7 +52,7 @@ jobs:
       - name: Install JS dependencies
         run: |
           echo "📦 JS 의존성 설치 시작"
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Build and Deploy to TestFlight
         env:
