@@ -1,17 +1,22 @@
 default_platform(:ios)
 
-app_store_connect_api_key(
-  key_id: "NW2M42KU3S",
-  issuer_id: "4327d55b-0013-4bae-82d5-766e184ff5f7",
-  key_filepath: "./fastlane/AuthKey_NW2M42KU3S.p8"
-)
-
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
+    # GitHub Secrets에서 환경변수로 받은 키 정보를 파일로 저장
+    File.write("./fastlane/AuthKey.p8", ENV["APP_STORE_CONNECT_API_KEY_KEY_CONTENT"])
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_filepath: "./fastlane/AuthKey.p8"
+    )
+
     match(
       type: "appstore",
-      readonly: false
+      readonly: false,
+      git_url: "https://github.com/Yusungyong/plateApp.git",
+      git_basic_authorization: ENV["GIT_AUTHORIZATION"] # 이건 3단계에서 다룰게
     )
 
     build_app(
@@ -20,6 +25,6 @@ platform :ios do
       export_method: "app-store"
     )
 
-    upload_to_testflight
+    upload_to_testflight(api_key: api_key)
   end
 end
