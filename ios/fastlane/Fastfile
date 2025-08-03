@@ -27,18 +27,13 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
 
+    match(type: "appstore") # 🔑 인증서와 프로파일 자동 설치
+
     build_app(
       workspace: "PlateApp.xcworkspace",
       scheme: "PlateApp",
-      export_method: "app-store",
-      export_options: {
-        signingStyle: "automatic",
-        compileBitcode: false,
-        manageAppVersionAndBuildNumber: false
-      },
-      xcargs: "-allowProvisioningUpdates"
+      export_method: "app-store"
     )
-
 
     upload_to_testflight(api_key: api_key)
   end
