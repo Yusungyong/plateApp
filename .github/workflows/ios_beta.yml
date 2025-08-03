@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - uses: actions/checkout@v3
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1.143.0
         with:
-          ruby-version: 3.1.3
+          ruby-version: 2.7.5
 
 
       - name: Check Ruby version and gem path
