@@ -58,6 +58,10 @@ jobs:
         run: |
           cd ios
           pod install
+          
+      - name: Install fastlane (if not using Bundler)
+        run: |
+          gem install fastlane
 
       - name: Build and Deploy to TestFlight
         env:
