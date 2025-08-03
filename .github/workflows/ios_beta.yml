@@ -61,4 +61,5 @@ jobs:
           APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
         run: |
           echo "🚀 Fastlane 빌드 및 TestFlight 배포 시작"
+          cd ios
           bundle exec fastlane ios beta
