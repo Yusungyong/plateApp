@@ -99,7 +99,7 @@ const UploadContents = forwardRef(({ onSubmitStateChange }, ref) => {
             contentContainerStyle={styles.container}
             keyboardShouldPersistTaps="handled"
             enableOnAndroid
-            extraScrollHeight={30}
+            extraScrollHeight={130}
           >
             <FileSelector
               file={file}
@@ -147,7 +147,7 @@ export default UploadContents;
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom: 200,
+    paddingBottom: 100,
     paddingHorizontal: 16,
   },
   descriptionInput: {

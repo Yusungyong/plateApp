@@ -1,17 +1,9 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  Alert,
-  StyleSheet,
-  View,
-  TextInput,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { StyleSheet, Keyboard, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useCreatePost } from '../Hooks/feedCreateHooks/useCreatePost';
 import { useNavigation } from '@react-navigation/native';
+
 import ImagePickerComponent from './ImagePickerComponent';
 import TextInputComponent from './TextInputComponent';
 import MultiFriendInputComponent from './MultiFriendInputComponent';
@@ -30,7 +22,9 @@ const CreatePost = forwardRef(({ onSubmitStateChange }, ref) => {
   const [isLocationSelected, setIsLocationSelected] = useState(false);
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [tags, setTags] = useState([]);
-  const friendInputRef = useRef<TextInput>(null);
+
+  const friendInputRef = useRef(null);
+  const contentInputRef = useRef(null);
 
   const friendList = useFriendList();
   const { createPost } = useCreatePost();
@@ -41,12 +35,12 @@ const CreatePost = forwardRef(({ onSubmitStateChange }, ref) => {
       Alert.alert('오류', '내용을 입력하세요.');
       return;
     }
-  
+
     if (!location || !isLocationSelected) {
       Alert.alert('오류', '주소 정보를 정확히 선택해주세요.');
       return;
     }
-  
+
     try {
       onSubmitStateChange(true);
       const friendNames = selectedFriends.map((f) => f.friendName).join(', ');
@@ -58,7 +52,7 @@ const CreatePost = forwardRef(({ onSubmitStateChange }, ref) => {
         selectedStoreName,
         tags: tags.join(', '),
       });
-  
+
       if (result) {
         Alert.alert('성공', '피드가 등록되었습니다.', [
           { text: '확인', onPress: () => navigation.navigate('홈', { refresh: true }) },
@@ -70,63 +64,67 @@ const CreatePost = forwardRef(({ onSubmitStateChange }, ref) => {
       onSubmitStateChange(false);
     }
   }, [content, selectedFriends, images, location, selectedStoreName, tags, isLocationSelected]);
-  
 
   useImperativeHandle(ref, () => ({ submit: handleSubmit }));
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAwareScrollView contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
-          <ImagePickerComponent
-            images={images}
-            setImages={setImages}
-            imageDimensions={imageDimensions}
-            setImageDimensions={setImageDimensions}
-          />
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.contentContainer}
+      keyboardShouldPersistTaps="handled"
+      enableOnAndroid
+      enableAutomaticScroll={true}
+      scrollEventThrottle={16}
+      extraScrollHeight={180}
+      keyboardOpeningTime={250}
+    >
+      <ImagePickerComponent
+        images={images}
+        setImages={setImages}
+        imageDimensions={imageDimensions}
+        setImageDimensions={setImageDimensions}
+      />
 
-          <TextInputComponent
-            value={content}
-            onChangeText={setContent}
-            placeholder="내용을 입력하세요"
-            multiline
-            onBlur={() => setTimeout(() => friendInputRef.current?.focus(), 200)}
-          />
+      <TextInputComponent
+        ref={contentInputRef}
+        value={content}
+        onChangeText={setContent}
+        placeholder="내용을 입력하세요"
+        multiline
+        returnKeyType="next"
+        onSubmitEditing={() => friendInputRef.current?.focus()}
+        blurOnSubmit={false}
+      />
 
-          <MultiFriendInputComponent
-            friendList={friendList}
-            onChangeSelected={(selected) => {
-              setSelectedFriends(selected);
-              setTimeout(() => friendInputRef.current?.focus(), 200);
-            }}
-            inputRef={friendInputRef}
-          />
+      <MultiFriendInputComponent
+        friendList={friendList}
+        selectedFriends={selectedFriends}
+        onChangeSelected={(selected) => setSelectedFriends(selected)}
+        inputRef={friendInputRef}
+      />
 
-          <TagInputComponent tags={tags} onChangeTags={setTags} />
+      <TagInputComponent tags={tags} onChangeTags={setTags} />
 
-          {isLocationSelected ? (
-            <SelectedLocationPreview
-              storeName={selectedStoreName}
-              location={location}
-              onClear={() => {
-                setIsLocationSelected(false);
-                setLocation('');
-                setSelectedStoreName('');
-              }}
-            />
-          ) : (
-            <LocationSelectorComponent
-              location={location}
-              setLocation={setLocation}
-              suggestions={suggestions}
-              setSuggestions={setSuggestions}
-              setSelectedStoreName={setSelectedStoreName}
-              setIsLocationSelected={setIsLocationSelected}
-            />
-          )}
-        </KeyboardAwareScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      {isLocationSelected ? (
+        <SelectedLocationPreview
+          storeName={selectedStoreName}
+          location={location}
+          onClear={() => {
+            setIsLocationSelected(false);
+            setLocation('');
+            setSelectedStoreName('');
+          }}
+        />
+      ) : (
+        <LocationSelectorComponent
+          location={location}
+          setLocation={setLocation}
+          suggestions={suggestions}
+          setSuggestions={setSuggestions}
+          setSelectedStoreName={setSelectedStoreName}
+          setIsLocationSelected={setIsLocationSelected}
+        />
+      )}
+    </KeyboardAwareScrollView>
   );
 });
 
@@ -134,7 +132,7 @@ export default CreatePost;
 
 const styles = StyleSheet.create({
   contentContainer: {
-    paddingBottom: 80,
+    paddingBottom: 180,
     paddingHorizontal: 8,
   },
 });

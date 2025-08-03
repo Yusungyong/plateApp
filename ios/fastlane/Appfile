@@ -1,0 +1,8 @@
+app_identifier("kr.yuseongyong.plateApp") # The bundle identifier of your app
+apple_id("su12ng@naver.com") # Your Apple Developer Portal username
+
+itc_team_id("127523391") # App Store Connect Team ID
+team_id("VM93Q33652") # Developer Portal Team ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   TextInput,
   StyleSheet,
@@ -44,7 +44,6 @@ const MultiFriendInputComponent: React.FC<Props> = ({
   const filteredFriends = useMemo(() => {
     if (!debouncedSearch) return [];
 
-    // friendName이 있는 친구 중 검색어에 일치하는 목록
     const friendNameMatched = friendList
       .filter(
         (friend) =>
@@ -57,7 +56,6 @@ const MultiFriendInputComponent: React.FC<Props> = ({
           )
       );
 
-    // friendName이 없는(username만 있는) 친구 중 검색어에 일치하는 목록
     const usernameMatched = friendList
       .filter(
         (friend) =>
@@ -69,7 +67,6 @@ const MultiFriendInputComponent: React.FC<Props> = ({
           )
       );
 
-    // friendName 있는 친구 → username만 있는 친구 순으로 최대 5개 반환
     return [...friendNameMatched, ...usernameMatched].slice(0, 5);
   }, [debouncedSearch, friendList, selectedFriends]);
 
@@ -90,7 +87,6 @@ const MultiFriendInputComponent: React.FC<Props> = ({
     }, 200);
   };
 
-  // 삭제도 friendName || username 기준으로 안전하게!
   const handleRemoveFriend = (key: string) => {
     const updated = selectedFriends.filter(
       (f) => (f.friendName || f.username) !== key
@@ -107,13 +103,19 @@ const MultiFriendInputComponent: React.FC<Props> = ({
         value={searchText}
         onChangeText={setSearchText}
         onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        returnKeyType="done"
       />
 
       {isFocused && filteredFriends.length > 0 && (
         <View style={styles.suggestionContainer}>
           <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 160 }}>
             {filteredFriends.map((item, index) => (
-              <Pressable key={index} style={styles.suggestionItem} onPress={() => handleSelectFriend(item)}>
+              <Pressable
+                key={index}
+                style={styles.suggestionItem}
+                onPress={() => handleSelectFriend(item)}
+              >
                 <FriendAvatar imageUrl={item.profileImageUrl} />
                 <Text>{item.friendName || item.username}</Text>
               </Pressable>
