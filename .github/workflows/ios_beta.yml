@@ -67,7 +67,7 @@ jobs:
           echo "🚀 Fastlane 빌드 및 TestFlight 배포 시작"
           cd ios
 
-          # .p8 파일 생성
+          # .p8 파일 생성 (fastlane 디렉토리 안에!)
           mkdir -p fastlane
           echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" > fastlane/AuthKey_NW2M42KU3S.p8
 
