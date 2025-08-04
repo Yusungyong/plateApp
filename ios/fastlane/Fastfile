@@ -16,7 +16,7 @@ platform :ios do
     match(
       type: "appstore",
       readonly: false,
-      git_url: "https://github.com/Yusungyong/plate-certificates.git",
+      git_url: "https://github.com/Yusungyong/plateApp.git",
       git_basic_authorization: ENV["GIT_AUTHORIZATION"]
     )
 
