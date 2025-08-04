@@ -56,6 +56,14 @@ jobs:
         run: |
           gem install fastlane
 
+      - name: 🔐 GitHub Actions 환경에서 PAT 인증 curl 테스트
+        env:
+          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
+        run: |
+          echo "🔍 curl 인증 테스트 시작"
+          curl -v -H "Authorization: $GIT_AUTHORIZATION" \
+            https://api.github.com/repos/Yusungyong/plate-certificates
+
       - name: Build and Deploy to TestFlight
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
