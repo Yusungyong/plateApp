@@ -1,4 +1,4 @@
-git_url("https://github.com/Yusungyong/plateApp.git")
+git_url("https://github.com/Yusungyong/plate-certificates.git")
 
 storage_mode("git")
 
