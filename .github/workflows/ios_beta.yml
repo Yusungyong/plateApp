@@ -1,67 +1,16 @@
-name: iOS Release
+name: Test CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  ios-build:
-    runs-on: macos-14
+  hello:
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.2.2  # ✅ 꼭 이 버전
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Decode App Store Connect API Key (.p8)
-        run: |
-          mkdir -p ios/fastlane
-          echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" | base64 -d > ios/fastlane/AuthKey_NW2M42KU3S.p8
-          echo "🧾 Decoded .p8 file contents:"
-          cat ios/fastlane/AuthKey_NW2M42KU3S.p8
-
-      - name: Check if secret is loaded
-        run: |
-          if [ -z "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" ]; then
-            echo "❌ Secret is EMPTY"
-          else
-            echo "✅ Secret is LOADED (length: ${#APP_STORE_CONNECT_API_KEY_KEY_CONTENT})"
-          fi
-        env:
-          APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
-
-
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
-
-      - name: Install Fastlane
-        run: sudo gem install fastlane
-
-      - name: Clean DerivedData
-        run: rm -rf ~/Library/Developer/Xcode/DerivedData
-
-      - name: Install iOS Pods
-        working-directory: ios
-        run: pod install
-
-      - name: Build and Upload with Fastlane
-        working-directory: ios
-        env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
-        run: fastlane release
+      - name: Say Hello
+        run: echo "🎉 GitHub Actions 작동 확인 완료!"
