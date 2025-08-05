@@ -1,4 +1,4 @@
-name: iOS Beta Deploy
+name: iOS Release (npm-based)
 
 on:
   push:
@@ -6,109 +6,40 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
-    runs-on: macos-13
+  ios-build:
+    runs-on: macos-14
 
     steps:
-      - name: ✅ 워크플로우 시작 확인용
-        run: echo "🚀 GitHub Actions 워크플로우 시작됨!"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
-
-      - name: 📁 현재 디렉토리 구조 확인
-        run: |
-          echo "📂 루트 디렉토리 파일 목록:"
-          ls -al
-
-      - name: Cache Ruby gems
-        uses: actions/cache@v3
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gem-
+          node-version: 20
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.2.2
-          bundler-cache: true
-
-      - name: Cache npm
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install JS dependencies
+      - name: Install Dependencies
         run: |
-          echo "📦 JS 의존성 설치 시작"
-          npm install --legacy-peer-deps
+          npm install
 
-      - name: Install CocoaPods dependencies
+      - name: Decode App Store Connect API Key (.p8)
         run: |
-          cd ios
-          echo "📦 CocoaPods 의존성 설치 시작"
-          pod install
-          echo "📦 CocoaPods 설치 완료"
+          mkdir -p ios/fastlane
+          echo "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 -d > ios/fastlane/AuthKey.p8
 
-      - name: Install fastlane (if not using Bundler)
-        run: |
-          gem install fastlane
-          fastlane --version
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
 
-      - name: 🔐 GitHub Actions 환경에서 PAT 인증 curl 테스트
-        env:
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
-        run: |
-          echo "🔍 curl 인증 테스트 시작"
-          curl -v -H "Authorization: $GIT_AUTHORIZATION" \
-            https://api.github.com/repos/Yusungyong/plate-certificates
+      - name: Install iOS Pods
+        working-directory: ios
+        run: pod install
 
-      - name: 🧪 git clone 직접 테스트 (fastlane match와 동일한 방식)
-        env:
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
-        run: |
-          echo "📦 git clone 테스트 중..."
-          git config --global http.https://github.com/.extraheader "Authorization: $GIT_AUTHORIZATION"
-          git clone https://github.com/Yusungyong/plate-certificates.git ./cert-clone-test
-          echo "✅ git clone 성공 여부:"
-          ls -al ./cert-clone-test || echo "❌ clone 실패"
-
-      - name: Build and Deploy to TestFlight (Fastlane)
+      - name: Build and Upload with Fastlane (via npx)
+        working-directory: ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
         run: |
-          echo "🚀 Fastlane 빌드 및 TestFlight 배포 시작"
-          cd ios
-
-          # 디렉토리 구조 확인
-          echo "📁 ios 디렉토리 구조:"
-          ls -al
-
-          # .p8 키 파일 생성
-          mkdir -p fastlane
-          echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" > fastlane/AuthKey_NW2M42KU3S.p8
-          echo "✅ .p8 키 생성 확인:"
-          ls -al fastlane
-
-          # Fastlane 실행
-          echo "🏃 fastlane ios beta 실행"
-          bundle exec fastlane ios beta || fastlane ios beta
-
-      - name: 🪵 Xcode Build Log 출력
-        if: failure()
-        run: |
-          echo "🔍 Xcode Build 실패 로그 출력"
-          cat ~/Library/Logs/gym/PlateApp-PlateApp.log || echo "❌ 로그 파일 없음"
+          npx fastlane release

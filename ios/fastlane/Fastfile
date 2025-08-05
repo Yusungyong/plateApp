@@ -1,41 +1,15 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Push a new beta build to TestFlight"
-  lane :beta do
-    # 디버깅용 디렉토리 확인
-    puts "🔍 현재 디렉토리: #{Dir.pwd}"
-    sh "ls -al"
-
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_filepath: "./fastlane/AuthKey_NW2M42KU3S.p8"  # CI에서 생성된 경로
-    )
-
-    match(
-      type: "appstore",
-      readonly: false,
-      git_url: "https://github.com/Yusungyong/plate-certificates.git",
-      git_basic_authorization: ENV["GIT_AUTHORIZATION"]
-    )
-
+  desc "Build and upload to TestFlight"
+  lane :release do
+    match(type: "appstore", readonly: true)
+    
     build_app(
-      workspace: "PlateApp.xcworkspace",
       scheme: "PlateApp",
-      configuration: "Release",
-      export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          "kr.yuseongyong.plateApp" => "match AppStore kr.yuseongyong.plateApp"
-        },
-        signingStyle: "manual",
-        signingCertificate: "Apple Distribution: Sungyong Yu (VM93Q33652)", # 명시적 지정
-        teamID: "VM93Q33652" # ✅ App Store Connect의 팀 ID
-      }
+      export_method: "app-store"
     )
-
-
-    upload_to_testflight(api_key: api_key)
+    
+    upload_to_testflight
   end
 end
