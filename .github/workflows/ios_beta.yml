@@ -29,9 +29,9 @@ jobs:
       - name: Decode App Store Connect API Key (.p8)
         run: |
           mkdir -p ios/fastlane
-          echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" | base64 -d > ios/fastlane/AuthKey.p8
+          echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" | base64 -d > ios/fastlane/AuthKey_NW2M42KU3S.p8
           echo "🧾 Decoded .p8 file contents:"
-          cat ios/fastlane/AuthKey.p8
+          cat ios/fastlane/AuthKey_NW2M42KU3S.p8
 
       - name: Install CocoaPods
         run: sudo gem install cocoapods
