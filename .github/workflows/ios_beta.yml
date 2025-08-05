@@ -36,6 +36,9 @@ jobs:
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
+      - name: Install Fastlane
+        run: sudo gem install fastlane
+
       - name: Clean DerivedData
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
