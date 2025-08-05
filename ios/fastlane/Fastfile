@@ -23,17 +23,18 @@ platform :ios do
     build_app(
       workspace: "PlateApp.xcworkspace",
       scheme: "PlateApp",
-      export_method: "app-store",
       configuration: "Release",
+      export_method: "app-store",
       export_options: {
         provisioningProfiles: {
           "kr.yuseongyong.plateApp" => "match AppStore kr.yuseongyong.plateApp"
         },
         signingStyle: "manual",
-        signingCertificate: "Apple Distribution",
-        teamID: "YOUR_TEAM_ID"
+        signingCertificate: "Apple Distribution: Sungyong Yu (VM93Q33652)", # 명시적 지정
+        teamID: "VM93Q33652" # ✅ App Store Connect의 팀 ID
       }
     )
+
 
     upload_to_testflight(api_key: api_key)
   end
