@@ -33,6 +33,17 @@ jobs:
           echo "🧾 Decoded .p8 file contents:"
           cat ios/fastlane/AuthKey_NW2M42KU3S.p8
 
+      - name: Check if secret is loaded
+        run: |
+          if [ -z "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" ]; then
+            echo "❌ Secret is EMPTY"
+          else
+            echo "✅ Secret is LOADED (length: ${#APP_STORE_CONNECT_API_KEY_KEY_CONTENT})"
+          fi
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_CONTENT }}
+
+
       - name: Install CocoaPods
         run: sudo gem install cocoapods
 
