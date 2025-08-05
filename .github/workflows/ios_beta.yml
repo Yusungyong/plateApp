@@ -13,6 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2.2  # ✅ 꼭 이 버전
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -25,6 +30,8 @@ jobs:
         run: |
           mkdir -p ios/fastlane
           echo "$APP_STORE_CONNECT_API_KEY_KEY_CONTENT" | base64 -d > ios/fastlane/AuthKey.p8
+          echo "🧾 Decoded .p8 file contents:"
+          cat ios/fastlane/AuthKey.p8
 
       - name: Install CocoaPods
         run: sudo gem install cocoapods
