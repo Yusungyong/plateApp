@@ -1,4 +1,4 @@
-name: iOS Release (npm-based)
+name: iOS Release
 
 on:
   push:
@@ -19,8 +19,7 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies
-        run: |
-          npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps
 
       - name: Decode App Store Connect API Key (.p8)
         run: |
@@ -29,6 +28,9 @@ jobs:
 
       - name: Install CocoaPods
         run: sudo gem install cocoapods
+
+      - name: Clean DerivedData
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Install iOS Pods
         working-directory: ios
@@ -42,4 +44,3 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
         run: fastlane release
-ㅁ
