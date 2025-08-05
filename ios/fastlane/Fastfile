@@ -28,7 +28,10 @@ platform :ios do
       export_options: {
         provisioningProfiles: {
           "kr.yuseongyong.plateApp" => "match AppStore kr.yuseongyong.plateApp"
-        }
+        },
+        signingStyle: "manual",
+        signingCertificate: "Apple Distribution",
+        teamID: "YOUR_TEAM_ID"
       }
     )
 
