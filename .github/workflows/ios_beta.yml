@@ -106,3 +106,9 @@ jobs:
           # Fastlane 실행
           echo "🏃 fastlane ios beta 실행"
           bundle exec fastlane ios beta || fastlane ios beta
+
+      - name: 🪵 Xcode Build Log 출력
+        if: failure()
+        run: |
+          echo "🔍 Xcode Build 실패 로그 출력"
+          cat ~/Library/Logs/gym/PlateApp-PlateApp.log || echo "❌ 로그 파일 없음"
