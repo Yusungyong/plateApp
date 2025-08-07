@@ -1,8 +1,16 @@
 #!/bin/sh
 
-# CocoaPods 설치
-brew install cocoapods
+echo "📦 [CI] Running pod install..."
 
-# iOS 디렉토리로 이동해서 pod install
-cd ios
-pod install
+# 필요한 경우 brew 설치
+if ! command -v pod &> /dev/null; then
+  echo "🔧 Installing CocoaPods..."
+  brew install cocoapods
+fi
+
+cd ios || exit 1
+rm -rf Pods
+rm -rf Podfile.lock
+pod install --repo-update
+
+echo "✅ [CI] pod install finished!"
