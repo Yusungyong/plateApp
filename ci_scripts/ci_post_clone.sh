@@ -2,7 +2,7 @@
 
 echo "📦 [CI] Running pod install..."
 
-# 필요한 경우 brew 설치
+# 필요한 경우 brew 설치테스트
 if ! command -v pod &> /dev/null; then
   echo "🔧 Installing CocoaPods..."
   brew install cocoapods
