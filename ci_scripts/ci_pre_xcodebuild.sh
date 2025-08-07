@@ -1,5 +1,5 @@
 #!/bin/sh
-
+########
 echo "📦 Bundling JS for production..."
 
 npx react-native bundle \
