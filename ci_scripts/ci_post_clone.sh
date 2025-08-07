@@ -1,16 +1,8 @@
 #!/bin/sh
 
-echo "📦 [CI] Running pod install..."
+echo "🔧 Installing JS dependencies..."
+npm install
 
-# 필요한 경우 brew 
-if ! command -v pod &> /dev/null; then
-  echo "🔧 Installing CocoaPods..."
-  brew install cocoapods
-fi
-
-cd ios || exit 1
-rm -rf Pods
-rm -rf Podfile.lock
-pod install --repo-update
-
-echo "✅ [CI] pod install finished!"
+echo "🔧 Installing CocoaPods..."
+cd ios
+pod install
