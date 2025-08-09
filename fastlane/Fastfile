@@ -66,15 +66,9 @@ platform :ios do
       export_method: "app-store",
       clean: true,
 
-      # ✅ 아카이브 단계에서 수동 서명값 강제
-      xcargs: %Q[
-        DEVELOPMENT_TEAM=VM93Q33652
-        CODE_SIGN_STYLE=Manual
-        PROVISIONING_PROFILE_SPECIFIER="match AppStore kr.yuseongyong.plateApp"
-        CODE_SIGN_IDENTITY="Apple Distribution"
-      ],
+      # 🔧 한 줄로!
+      xcargs: %(DEVELOPMENT_TEAM=VM93Q33652 CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="match AppStore kr.yuseongyong.plateApp" CODE_SIGN_IDENTITY="Apple Distribution"),
 
-      # ✅ 내보내기 단계에서도 동일하게 명시 (더 안정)
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
@@ -82,6 +76,7 @@ platform :ios do
         }
       }
     )
+
 
     upload_to_testflight(
       api_key: api_key,
