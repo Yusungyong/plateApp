@@ -1,52 +1,62 @@
-# …위 생략…
+default_platform(:ios)
 
-lane :release do
-  api_key =
-    if ENV["ASC_KEY_P8"] # CI용(시크릿)
-      app_store_connect_api_key(
-        key_id: ENV.fetch("ASC_KEY_ID"),
-        issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-        key_content: ENV.fetch("ASC_KEY_P8"),
-        duration: 1200,
-        in_house: false
-      )
-    else # 로컬용(파일)
-      app_store_connect_api_key(
-        key_id: ENV.fetch("ASC_KEY_ID"),
-        issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-        key_filepath: "./AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8",
-        duration: 1200,
-        in_house: false
-      )
-    end
+platform :ios do
+  # ── 1) ASC 연결 진단 ─────────────────────────────────────────────
+  desc "Test App Store Connect API connection"
+  lane :asc_ping do
+    token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key: File.read("./AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8"), # fastlane 작업디렉토리 기준
+      duration: 1200,
+      in_house: false
+    )
+    Spaceship::ConnectAPI.token = token
+    apps = Spaceship::ConnectAPI::App.all
+    UI.message("ASC app count: #{apps.size}")
+  end
 
-  match(
-    type: "appstore",
-    api_key: api_key,
-    app_identifier: ["kr.yuseongyong.plateApp"],
-    git_url: "https://github.com/Yusungyong/plate-certificates.git",
-    git_basic_authorization: ENV.fetch("GIT_AUTHORIZATION"),
-    git_branch: "main",                 # ← 바꾼 브랜치
-    clone_branch_directly: true,
-    storage_mode: "git",
-    readonly: true
-  )
+  # ── 2) TestFlight 빌드/업로드 ────────────────────────────────────
+  desc "Build & upload to TestFlight"
+  lane :release do
+    # CI에서는 워크플로에서 .p8 파일을 미리 생성해둠 (fastlane/AuthKey_<ID>.p8)
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: "./AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8",
+      duration: 1200,
+      in_house: false
+    )
 
-  increment_build_number(xcodeproj: "ios/PlateApp.xcodeproj")
+    match(
+      type: "appstore",
+      api_key: api_key,
+      app_identifier: ["kr.yuseongyong.plateApp"],
+      git_url: "https://github.com/Yusungyong/plate-certificates.git",
+      git_basic_authorization: ENV.fetch("GIT_AUTHORIZATION"), # Base64(username:PAT)만!
+      git_branch: "main",
+      clone_branch_directly: true,
+      storage_mode: "git",
+      readonly: true
+      # team_id: "AB12CD34EF"     # 필요 시
+      # itc_team_id: "123456789"  # 필요 시
+    )
 
-  build_app(
-    workspace: "ios/PlateApp.xcworkspace",
-    scheme: "PlateApp",
-    configuration: "Release",
-    export_method: "app-store",
-    clean: true
-  )
+    increment_build_number(xcodeproj: "ios/PlateApp.xcodeproj")
 
-  upload_to_testflight(
-    api_key: api_key,
-    changelog: ENV["TF_CHANGELOG"] || "Bug fixes & performance improvements",
-    skip_waiting_for_build_processing: true,
-    # 필요시 내부 테스터 그룹 자동 배포:
-    # groups: ["Internal Testers"]
-  )
+    build_app(
+      workspace: "ios/PlateApp.xcworkspace",
+      scheme: "PlateApp",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: true
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      changelog: ENV["TF_CHANGELOG"] || "CI auto build",
+      skip_waiting_for_build_processing: true
+      # groups: ["Internal Testers"] # 원하면 내부 테스터 자동 배포
+    )
+  end
 end

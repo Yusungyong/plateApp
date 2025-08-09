@@ -46,12 +46,19 @@ jobs:
           cd ios
           pod install --repo-update
 
+      # ⬇️ 여기서 시크릿으로 .p8 파일 생성 (fastlane 디렉토리 안)
+      - name: Create AuthKey file from secret
+        run: |
+          mkdir -p fastlane
+          cat > fastlane/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 << 'EOF'
+          ${{ secrets.ASC_KEY_P8 }}
+          EOF
+
       - name: Fastlane Release
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}   # Basic 붙이지 말 것
+          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}   # Basic 붙이지 말기
           TF_CHANGELOG: "CI auto build"
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
         run: |
