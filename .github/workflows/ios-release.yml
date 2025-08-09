@@ -85,18 +85,6 @@ jobs:
           UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(/usr/bin/security cms -D -i profile.mobileprovision))
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
 
-      # (.p8 파일 생성은 선택) -> secrets를 env로 바인딩 후 env 비교로 if 처리
-      - name: Create AuthKey file from secret (optional)
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        if: ${{ env.ASC_KEY_P8 != '' }}
-        run: |
-          mkdir -p fastlane
-          cat > fastlane/AuthKey_${ASC_KEY_ID}.p8 << 'EOF'
-          ${ASC_KEY_P8}
-          EOF
-
       - name: Verify keys (optional)
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
