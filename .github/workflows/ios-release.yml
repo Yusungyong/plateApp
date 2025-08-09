@@ -22,16 +22,11 @@ jobs:
         with:
           xcode-version: "15.4"
 
-      - name: Set up Ruby
+      - name: Set up Ruby (with bundler cache)
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
-          bundler-cache: true
-
-      - name: Install CocoaPods
-        run: |
-          gem install cocoapods --no-document
-          pod --version
+          bundler-cache: true   # ✅ Gemfile.lock 기준으로 fastlane+cocoapods 설치/캐시
 
       - name: Cache Pods
         uses: actions/cache@v4
@@ -46,7 +41,6 @@ jobs:
           cd ios
           pod install --repo-update
 
-      # ⬇️ 여기서 시크릿으로 .p8 파일 생성 (fastlane 디렉토리 안)
       - name: Create AuthKey file from secret
         run: |
           mkdir -p fastlane
@@ -58,7 +52,7 @@ jobs:
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}   # Basic 붙이지 말기
+          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
           TF_CHANGELOG: "CI auto build"
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
         run: |
