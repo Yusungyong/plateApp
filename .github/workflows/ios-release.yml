@@ -26,7 +26,31 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
-          bundler-cache: true   # ✅ Gemfile.lock 기준으로 fastlane+cocoapods 설치/캐시
+          bundler-cache: true
+
+      # ✅ Node + npm 캐시
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # ✅ JS 의존성 설치 (npm 고정)
+      - name: Install JS dependencies
+        run: |
+          npm config set fund false
+          npm config set audit false
+          # lockfile 기준 설치 먼저 시도
+          if [ -f package-lock.json ]; then
+            echo "Trying npm ci..."
+            if ! npm ci; then
+              echo "npm ci failed. Falling back to npm install --legacy-peer-deps"
+              npm install --legacy-peer-deps
+            fi
+          else
+            echo "No package-lock.json, using npm install --legacy-peer-deps"
+            npm install --legacy-peer-deps
+          fi
 
       - name: Cache Pods
         uses: actions/cache@v4
