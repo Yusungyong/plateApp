@@ -26,21 +26,20 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
-          bundler-cache: true
+          bundler-cache: true   # Gemfile.lock 기반 fastlane / cocoapods 설치 및 캐시
 
-      # ✅ Node + npm 캐시
+      # ✅ Node + npm 고정 (RN 스크립트용), npm 캐시
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      # ✅ JS 의존성 설치 (npm 고정)
+      # ✅ JS 의존성 설치 (npm ci → 실패 시 legacy-peer-deps 폴백)
       - name: Install JS dependencies
         run: |
           npm config set fund false
           npm config set audit false
-          # lockfile 기준 설치 먼저 시도
           if [ -f package-lock.json ]; then
             echo "Trying npm ci..."
             if ! npm ci; then
@@ -65,6 +64,7 @@ jobs:
           cd ios
           pod install --repo-update
 
+      # ⬇️ 시크릿으로 p8 파일 생성 (fastlane 작업 디렉토리 기준: fastlane/ 내부)
       - name: Create AuthKey file from secret
         run: |
           mkdir -p fastlane
@@ -72,11 +72,18 @@ jobs:
           ${{ secrets.ASC_KEY_P8 }}
           EOF
 
+      # ⬇️ 생성 검증 (있고, 크기가 200~400바이트대면 정상: EC 키)
+      - name: Verify AuthKey file
+        run: |
+          ls -al fastlane
+          wc -c fastlane/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
       - name: Fastlane Release
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}      # 파일 누락 시 Fastfile에서 fallback로 사용
+          GIT_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}  # Basic 붙이지 말 것
           TF_CHANGELOG: "CI auto build"
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
         run: |

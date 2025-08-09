@@ -4,13 +4,31 @@ platform :ios do
   # ── 1) ASC 연결 진단 ─────────────────────────────────────────────
   desc "Test App Store Connect API connection"
   lane :asc_ping do
-    token = Spaceship::ConnectAPI::Token.create(
-      key_id: ENV.fetch("ASC_KEY_ID"),
-      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-      key: File.read("./AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8"), # fastlane 작업디렉토리 기준
-      duration: 1200,
-      in_house: false
-    )
+    id = ENV.fetch("ASC_KEY_ID")
+    issuer = ENV.fetch("ASC_ISSUER_ID")
+    keyfile = "./AuthKey_#{id}.p8" # fastlane 작업 디렉토리 기준
+
+    token =
+      if File.exist?(keyfile)
+        # p8 파일로 토큰 생성
+        Spaceship::ConnectAPI::Token.create(
+          key_id: id,
+          issuer_id: issuer,
+          key: File.read(keyfile),
+          duration: 1200,
+          in_house: false
+        )
+      else
+        # 시크릿의 p8 내용으로 토큰 생성
+        Spaceship::ConnectAPI::Token.create(
+          key_id: id,
+          issuer_id: issuer,
+          key: ENV.fetch("ASC_KEY_P8"),
+          duration: 1200,
+          in_house: false
+        )
+      end
+
     Spaceship::ConnectAPI.token = token
     apps = Spaceship::ConnectAPI::App.all
     UI.message("ASC app count: #{apps.size}")
@@ -19,14 +37,28 @@ platform :ios do
   # ── 2) TestFlight 빌드/업로드 ────────────────────────────────────
   desc "Build & upload to TestFlight"
   lane :release do
-    # CI에서는 워크플로에서 .p8 파일을 미리 생성해둠 (fastlane/AuthKey_<ID>.p8)
-    api_key = app_store_connect_api_key(
-      key_id: ENV.fetch("ASC_KEY_ID"),
-      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
-      key_filepath: "./AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8",
-      duration: 1200,
-      in_house: false
-    )
+    id = ENV.fetch("ASC_KEY_ID")
+    issuer = ENV.fetch("ASC_ISSUER_ID")
+    keyfile = "./AuthKey_#{id}.p8" # fastlane 작업 디렉토리 기준
+
+    api_key =
+      if File.exist?(keyfile)
+        app_store_connect_api_key(
+          key_id: id,
+          issuer_id: issuer,
+          key_filepath: keyfile,
+          duration: 1200,
+          in_house: false
+        )
+      else
+        app_store_connect_api_key(
+          key_id: id,
+          issuer_id: issuer,
+          key_content: ENV.fetch("ASC_KEY_P8"),
+          duration: 1200,
+          in_house: false
+        )
+      end
 
     match(
       type: "appstore",
