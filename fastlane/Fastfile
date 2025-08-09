@@ -1,12 +1,12 @@
 default_platform(:ios)
 
 platform :ios do
-  # ── (선택) ASC 연결 진단 ───────────────────────────────────────
+  # (선택) ASC 연결 진단
   desc "Test App Store Connect API connection (no match)"
   lane :asc_ping do
     id = ENV.fetch("ASC_KEY_ID")
     issuer = ENV.fetch("ASC_ISSUER_ID")
-    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # fastlane 작업 디렉토리 기준 절대경로
+    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # 절대경로
 
     token =
       if File.exist?(keyfile)
@@ -28,12 +28,12 @@ platform :ios do
     UI.message("ASC app count: #{apps.size}")
   end
 
-  # ── TestFlight 빌드/업로드 (match 없음) ─────────────────────────
+  # TestFlight 빌드/업로드 (match 사용 안 함)
   desc "Build & upload to TestFlight (no match)"
   lane :release do
     id = ENV.fetch("ASC_KEY_ID")
     issuer = ENV.fetch("ASC_ISSUER_ID")
-    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # fastlane 작업 디렉토리 기준 절대경로
+    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # 절대경로
 
     api_key =
       if File.exist?(keyfile)
@@ -50,9 +50,6 @@ platform :ios do
         )
       end
 
-    # 필요하면 빌드 넘버 자동 증가(옵션)
-    # increment_build_number(xcodeproj: "ios/PlateApp.xcodeproj")
-
     build_app(
       workspace: "ios/PlateApp.xcworkspace",
       scheme: "PlateApp",
@@ -61,7 +58,7 @@ platform :ios do
       clean: true
       # export_options: {
       #   provisioningProfiles: {
-      #     "kr.yuseongyong.plateApp" => "PlateApp AppStore" # 프로비저닝 프로파일 이름(필요 시 명시)
+      #     "kr.yuseongyong.plateApp" => "match AppStore kr.yuseongyong.plateApp"
       #   }
       # }
     )
@@ -70,7 +67,6 @@ platform :ios do
       api_key: api_key,
       skip_waiting_for_build_processing: true,
       changelog: ENV["TF_CHANGELOG"] || "CI auto build"
-      # groups: ["Internal Testers"] # 내부 테스터 자동 배포 원하면 사용
     )
   end
 end

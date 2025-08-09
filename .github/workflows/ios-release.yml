@@ -26,16 +26,14 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
-          bundler-cache: true   # Gemfile.lock 기반 fastlane/cocoapods 설치 + 캐시
+          bundler-cache: true
 
-      # ⬇️ Node + npm 세팅 (RN 스크립트용)
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      # ⬇️ JS 의존성 설치 (npm ci → 실패 시 legacy peer deps 폴백)
       - name: Install JS dependencies
         run: |
           npm config set fund false
@@ -51,7 +49,6 @@ jobs:
             npm install --legacy-peer-deps
           fi
 
-      # ⬇️ CocoaPods 캐시
       - name: Cache Pods
         uses: actions/cache@v4
         with:
@@ -65,15 +62,15 @@ jobs:
           cd ios
           pod install --repo-update
 
-      # ── 여기부터 옵션 B 핵심: 사인 자원 설치 ─────────────────────
+      # --- 옵션 B: 사인 리소스 설치 ---
       - name: Install signing certificate (p12)
         env:
-          IOS_DIST_P12: ${{ secrets.IOS_DIST_P12 }}                 # base64 인코딩된 .p12
-          IOS_DIST_P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }} # .p12 암호
+          DISTRIBUTION_P12_BASE64: ${{ secrets.DISTRIBUTION_P12_BASE64 }}
+          DISTRIBUTION_P12_PASSWORD: ${{ secrets.DISTRIBUTION_P12_PASSWORD }}
         run: |
-          echo "$IOS_DIST_P12" | base64 --decode > signing.p12
+          echo "$DISTRIBUTION_P12_BASE64" | base64 --decode > signing.p12
           security create-keychain -p "" build.keychain
-          security import signing.p12 -k ~/Library/Keychains/build.keychain -P "$IOS_DIST_P12_PASSWORD" -T /usr/bin/codesign
+          security import signing.p12 -k ~/Library/Keychains/build.keychain -P "$DISTRIBUTION_P12_PASSWORD" -T /usr/bin/codesign
           security list-keychains -s ~/Library/Keychains/build.keychain login.keychain-db
           security default-keychain -s ~/Library/Keychains/build.keychain
           security unlock-keychain -p "" ~/Library/Keychains/build.keychain
@@ -81,42 +78,45 @@ jobs:
 
       - name: Install provisioning profile (App Store)
         env:
-          IOS_PROFILE_APPSTORE: ${{ secrets.IOS_PROFILE_APPSTORE }}  # base64 인코딩된 .mobileprovision
+          IOS_PROFILE_APPSTORE: ${{ secrets.IOS_PROFILE_APPSTORE }}
         run: |
           echo "$IOS_PROFILE_APPSTORE" | base64 --decode > profile.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(/usr/bin/security cms -D -i profile.mobileprovision))
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
 
-      # (선택) .p8 파일로 쓰고 싶으면 생성 — 없으면 Fastfile이 ASC_KEY_P8 시크릿 사용
+      # (.p8 파일 생성은 선택) -> secrets를 env로 바인딩 후 env 비교로 if 처리
       - name: Create AuthKey file from secret (optional)
-        if: ${{ secrets.ASC_KEY_P8 != '' }}
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        if: ${{ env.ASC_KEY_P8 != '' }}
         run: |
           mkdir -p fastlane
-          cat > fastlane/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 << 'EOF'
-          ${{ secrets.ASC_KEY_P8 }}
+          cat > fastlane/AuthKey_${ASC_KEY_ID}.p8 << 'EOF'
+          ${ASC_KEY_P8}
           EOF
 
       - name: Verify keys (optional)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
-          if [ -f fastlane/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 ]; then
+          if [ -f fastlane/AuthKey_${ASC_KEY_ID}.p8 ]; then
             ls -al fastlane
-            wc -c fastlane/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+            wc -c fastlane/AuthKey_${ASC_KEY_ID}.p8
           else
             echo "Using ASC_KEY_P8 from env (no file created)"
           fi
 
-      # ── Fastlane 릴리즈 ─────────────────────────────────────────
       - name: Fastlane Release
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}        # 파일 없으면 Fastfile이 이 값 사용
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           TF_CHANGELOG: "CI auto build"
         run: |
           bundle exec fastlane ios release
 
-      # 산출물 업로드(실패해도 확인 가능)
       - name: Upload IPA & dSYM
         if: always()
         uses: actions/upload-artifact@v4
