@@ -62,7 +62,7 @@ platform :ios do
       scheme: "PlateApp",
       configuration: "Release",
       export_method: "app-store",
-      clean: true,
+      # clean: true,
       # 수동 서명 사용
       xcargs: %(
         DEVELOPMENT_TEAM=VM93Q33652

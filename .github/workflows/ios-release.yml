@@ -107,6 +107,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           TF_CHANGELOG: "CI auto build"
+          FASTLANE_XCBEAUTIFY_DISABLE: "1"
         run: |
           bundle exec fastlane ios release
 
