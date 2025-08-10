@@ -60,8 +60,13 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+platform :ios, '16.0'
 prepare_react_native_project!
+
+# (옵션) CocoaPods 동작 안정화
+install! 'cocoapods',
+  :warn_for_multiple_pod_sources => false,
+  :warn_for_unused_master_specs_repo => false
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -74,27 +79,36 @@ target 'PlateApp' do
 
   use_react_native!(
     :path => config[:reactNativePath],
-    # An absolute path to your application root.
+    # 절대 경로로 앱 루트 지정
     :app_path => "#{Pod::Config.instance.installation_root}/..",
     :hermes_enabled => true
   )
 
-  # ✅ Firebase 관련 모듈들을 modular_headers 로 명시
-  pod 'Firebase', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseMessaging', :modular_headers => true
-  pod 'GoogleUtilities', :modular_headers => true
+  # ✅ Firebase/Google 일부를 modular_headers로 명시 (충돌 방지)
+  pod 'Firebase',            :modular_headers => true
+  pod 'FirebaseCore',        :modular_headers => true
+  pod 'FirebaseMessaging',   :modular_headers => true
+  pod 'GoogleUtilities',     :modular_headers => true
 
-  # 기존 pod 설정
+  # 기존 설정
   pod 'GoogleMaps'
   pod 'Google-Maps-iOS-Utils'
   pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+end
 
-  post_install do |installer|
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-    )
+# ✅ 모든 Pod 타깃에 iOS 최소 버전 강제 (빌드 오류 해결 핵심)
+post_install do |installer|
+  react_native_post_install(
+    installer,
+    Pod::Config.instance.installation_root.join('..').to_path,
+    :mac_catalyst_enabled => false
+  )
+
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      end
+    end
   end
 end

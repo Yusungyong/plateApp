@@ -65,10 +65,7 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-
-      # 🔧 한 줄로!
-      xcargs: %(DEVELOPMENT_TEAM=VM93Q33652 CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="match AppStore kr.yuseongyong.plateApp" CODE_SIGN_IDENTITY="Apple Distribution"),
-
+      xcargs: %(DEVELOPMENT_TEAM=VM93Q33652 CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="match AppStore kr.yuseongyong.plateApp" CODE_SIGN_IDENTITY="Apple Distribution" IPHONEOS_DEPLOYMENT_TARGET=16.0),
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
@@ -76,6 +73,7 @@ platform :ios do
         }
       }
     )
+
 
 
     upload_to_testflight(
