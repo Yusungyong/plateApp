@@ -1,12 +1,12 @@
 default_platform(:ios)
 
 platform :ios do
-  # (선택) ASC 연결 테스트
+  # ASC 연결 테스트(네 것 유지)
   desc "Test App Store Connect API connection (no match)"
   lane :asc_ping do
     id = ENV.fetch("ASC_KEY_ID")
     issuer = ENV.fetch("ASC_ISSUER_ID")
-    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # 절대경로
+    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__)
 
     token =
       if ENV["ASC_KEY_P8"] && !ENV["ASC_KEY_P8"].strip.empty?
@@ -30,12 +30,12 @@ platform :ios do
     UI.message("ASC app count: #{apps.size}")
   end
 
-  # TestFlight 빌드/업로드 (match 사용 안 함)
+  # TestFlight 빌드/업로드(네 것 유지)
   desc "Build & upload to TestFlight (no match)"
   lane :release do
     id = ENV.fetch("ASC_KEY_ID")
     issuer = ENV.fetch("ASC_ISSUER_ID")
-    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__) # 절대경로
+    keyfile = File.expand_path("./AuthKey_#{id}.p8", __dir__)
 
     api_key =
       if ENV["ASC_KEY_P8"] && !ENV["ASC_KEY_P8"].strip.empty?
@@ -56,7 +56,6 @@ platform :ios do
         UI.user_error!("No ASC key provided (ASC_KEY_P8 env or #{keyfile})")
       end
 
-    # 필요하면 빌드 넘버 증가
     # increment_build_number(xcodeproj: "ios/PlateApp.xcodeproj")
 
     build_app(
@@ -74,13 +73,11 @@ platform :ios do
       }
     )
 
-
-
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,
       changelog: ENV["TF_CHANGELOG"] || "CI auto build"
-      # groups: ["Internal Testers"] # 필요하면 내부 테스터 그룹 지정
+      # groups: ["Internal Testers"]
     )
   end
 end
