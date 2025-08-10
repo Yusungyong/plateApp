@@ -68,7 +68,7 @@ install! 'cocoapods',
   :warn_for_multiple_pod_sources => false,
   :warn_for_unused_master_specs_repo => false
 
-# (옵션) 동적/정적 프레임워크 전환 필요 시 USE_FRAMEWORKS=dynamic|static 로 지정
+# USE_FRAMEWORKS 환경변수로 동적/정적 전환 지원 (기본: 정적)
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -81,44 +81,34 @@ target 'PlateApp' do
   use_react_native!(
     :path => config[:reactNativePath],
     :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :hermes_enabled => false # ❌ Hermes 끔 (빌드 스크립트 에러 방지)
+    :hermes_enabled => false # JSC 사용 중이면 false 유지
   )
 
-  # ✅ Firebase/Google 일부는 modular_headers 로 충돌 방지
-  pod 'Firebase',            :modular_headers => true
-  pod 'FirebaseCore',        :modular_headers => true
-  pod 'FirebaseMessaging',   :modular_headers => true
-  pod 'GoogleUtilities',     :modular_headers => true
+  # ===== Firebase =====
+  # Swift Pod(FirebaseCoreInternal)가 의존하는 GoogleUtilities를 모듈러 헤더로 지정해야
+  # 정적 라이브러리 통합 시 모듈 맵 문제가 사라집니다.
+  pod 'Firebase/Messaging'
+  pod 'GoogleUtilities', :modular_headers => true
 
-  # 지도/기타
+  # ===== Maps =====
   pod 'GoogleMaps'
   pod 'Google-Maps-iOS-Utils'
   pod 'react-native-maps', :path => '../node_modules/react-native-maps'
 end
 
 post_install do |installer|
-  # RN 기본 후처리
+  # RN 표준 post_install
   react_native_post_install(
     installer,
-    # RN 0.73+에서도 동작하던 형태 유지
     Pod::Config.instance.installation_root.join('..').to_path,
     :mac_catalyst_enabled => false
   )
 
-  # 🔧 전 타깃에 iOS 최소버전/Swift 버전 강제 (Xcode 15.4 = Swift 5.10)
+  # 모든 Pod 타깃에 최소 배포 타깃 강제(빌드 환경 불일치 방지)
   installer.generated_projects.each do |project|
     project.targets.each do |target|
-      target.build_configurations.each do |cfg|
-        # iOS 16.0로 통일
-        cfg.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
-
-        # Swift 5.10 고정 (Swift 6 키워드/플래그로 인한 컴파일 에러 방지)
-        cfg.build_settings['SWIFT_VERSION'] = '5.10'
-
-        # Swift 6 관련 실험 플래그가 섞여 있으면 제거
-        flags = Array(cfg.build_settings['OTHER_SWIFT_FLAGS'])
-        flags = flags.reject { |f| f.to_s.include?('swift-version 6') || f.to_s.include?('enable-experimental-feature') }
-        cfg.build_settings['OTHER_SWIFT_FLAGS'] = flags unless flags.empty?
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
       end
     end
   end
