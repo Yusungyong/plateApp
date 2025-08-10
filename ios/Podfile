@@ -67,7 +67,7 @@ install! 'cocoapods',
   :warn_for_multiple_pod_sources => false,
   :warn_for_unused_master_specs_repo => false
 
-# 새 아키텍처 강제 비활성(중복 코드젠 예방)
+# 새 아키텍처 비활성(중복 코드젠 예방)
 ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
 # 필요 시 동적/정적 전환 (기본: 정적)
@@ -75,15 +75,6 @@ linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
-end
-
-# 🔹 코드젠 산출물이 중복되는 경우가 있어, pod 설치 직전 항상 정리
-pre_install do |installer|
-  generated = File.join(Pod::Config.instance.installation_root.to_path, 'build', 'generated', 'ios')
-  if File.directory?(generated)
-    Pod::UI.puts "Cleaning stale codegen: #{generated}".yellow
-    FileUtils.rm_rf(generated)
-  end
 end
 
 target 'PlateApp' do
@@ -96,10 +87,9 @@ target 'PlateApp' do
   )
 
   # ===== Firebase / Google =====
-  # Swift Pod(FirebaseCoreInternal) → GoogleUtilities 모듈맵 필요
   pod 'Firebase/Messaging'
   pod 'GoogleUtilities',       :modular_headers => true
-  pod 'FirebaseCoreInternal',  :modular_headers => true  # 명시적으로 추가(트랜지티브여도 안전)
+  pod 'FirebaseCoreInternal',  :modular_headers => true
 
   # ===== Maps =====
   pod 'GoogleMaps'
