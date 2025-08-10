@@ -87,8 +87,16 @@ jobs:
         run: |
           echo "$IOS_PROFILE_APPSTORE" | base64 --decode > profile.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(/usr/bin/security cms -D -i profile.mobileprovision))
+          INFO=$(/usr/bin/security cms -D -i profile.mobileprovision)
+          UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< "$INFO")
+          NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< "$INFO")
+          APS=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:aps-environment' /dev/stdin <<< "$INFO" 2>/dev/null || echo "unknown")
+          echo "Profile UUID: $UUID"
+          echo "Profile Name: $NAME"
+          echo "APS Environment: $APS"   # production이면 App Store/Ad Hoc 성격
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
+          echo "PROFILE_NAME=$NAME" >> $GITHUB_ENV
 
       - name: Verify keys (optional)
         env:
