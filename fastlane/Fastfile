@@ -26,25 +26,24 @@ platform :ios do
         UI.user_error!("No ASC key provided (ASC_KEY_P8 env or #{keyfile})")
       end
 
-    # 워크플로에서 추출해 준 값 사용 (없으면 안전한 기본값)
-    profile_uuid = ENV["PROFILE_UUID"] || ""
-    profile_name = ENV["PROFILE_NAME"] || "AppStore #{ENV['PRODUCT_BUNDLE_IDENTIFIER'] || 'kr.yuseongyong.plateApp'}"
+    # 👉 프로파일/수동서명 강제 주입 ❌ 전부 제거
+    #    - CODE_SIGN_STYLE=Manual, PROVISIONING_PROFILE_SPECIFIER, CODE_SIGN_IDENTITY 다 제거
+    #    - disable_xcpretty 도 경고나니 제거하고 formatter 사용
 
     build_app(
       workspace: "ios/PlateApp.xcworkspace",
       scheme: "PlateApp",
       configuration: "Release",
       export_method: "app-store",
-      disable_xcpretty: true,
-      # ✅ 한 줄짜리 xcargs로 강제 서명 값 확실히 주입
-      xcargs: "DEVELOPMENT_TEAM=VM93Q33652 CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid} CODE_SIGN_IDENTITY=Apple\\ Distribution CODE_SIGNING_REQUIRED=YES CODE_SIGNING_ALLOWED=YES",
+      xcodebuild_formatter: "xcbeautify",
+      # 최소한의 xcargs 만 (팀 ID 정도)
+      xcargs: "DEVELOPMENT_TEAM=VM93Q33652",
+
+      # export_options 에서 manual / provisioningProfiles 맵핑도 제거
       export_options: {
-        method: "app-store",
-        signingStyle: "manual",
-        provisioningProfiles: {
-          "kr.yuseongyong.plateApp" => profile_name
-        }
+        method: "app-store"
       },
+
       output_directory: ".",
       output_name: "PlateApp"
     )
