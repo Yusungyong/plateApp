@@ -81,7 +81,7 @@ target 'PlateApp' do
     :path => config[:reactNativePath],
     # 절대 경로로 앱 루트 지정
     :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :hermes_enabled => true
+    :hermes_enabled => false
   )
 
   # ✅ Firebase/Google 일부를 modular_headers로 명시 (충돌 방지)
