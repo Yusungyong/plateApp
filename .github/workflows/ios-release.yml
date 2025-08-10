@@ -57,17 +57,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      # 🔹 코드젠 산출물 중복으로 생기는 경고/실패 방지(빌드 전 항상 정리)
-      - name: Clean stale codegen
+      # RN post_install가 build/generated/ios를 청소할 때 해당 폴더가 없으면 실패하는 케이스가 있어 사전 생성
+      - name: Ensure RN codegen dir exists
         run: |
-          rm -rf ios/build/generated/ios
+          mkdir -p ios/build/generated/ios
 
       - name: Pod install
         run: |
           cd ios
           pod install --repo-update
 
-      # --- 옵션 B: 사인 리소스 설치 ---
+      # --- 사인 리소스 설치 (p12) ---
       - name: Install signing certificate (p12)
         env:
           DISTRIBUTION_P12_BASE64: ${{ secrets.DISTRIBUTION_P12_BASE64 }}
@@ -109,6 +109,20 @@ jobs:
           TF_CHANGELOG: "CI auto build"
         run: |
           bundle exec fastlane ios release
+
+      # 실패 시 xcodebuild 로그 일부 노출 (원인 라인 확인)
+      - name: Print xcodebuild log tail
+        if: failure()
+        run: |
+          LOG=~/Library/Logs/gym/PlateApp-PlateApp.log
+          if [ -f "$LOG" ]; then
+            echo "---- First 120 lines ----"
+            head -n 120 "$LOG"
+            echo "---- Last 200 lines ----"
+            tail -n 200 "$LOG"
+          else
+            echo "Log not found: $LOG"
+          fi
 
       - name: Upload IPA & dSYM
         if: always()
