@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+env:
+  MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY }}
 
 concurrency:
   group: ios-release-${{ github.ref }}
