@@ -34,8 +34,9 @@ platform :ios do
       type: "appstore",
       app_identifier: "kr.yuseongyong.plateApp",
       readonly: true,
-      git_url: "https://github.com/Yusungyong/plate-certificates.git", # 너희 cert repo
-      clone_branch_directly: true
+      git_url: "git@github.com:Yusungyong/plate-certificates.git" # ← SSH
+      # clone_branch_directly: true  # ← 첫 실행엔 제거
+      # git_branch: "master"         # 기본이면 생략 가능
     )
 
     build_app(
